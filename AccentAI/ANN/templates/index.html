@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AccentAI</title>
+  {% load static %}
+  <link rel="stylesheet" href="{% static 'style.css' %}">
+</head>
+
+<body>
+  <div class="Final">
+    <div>
+      <div id="Nothing">
+        <div class="">
+          <div class="circle-container">
+            <img src="https://ascentt-wl-training-s3.s3.amazonaws.com/ANN/Wave+Sound.gif" alt="Wave Sound">
+          </div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <!-- Instrument Cluster -->
+      <div class="cluster">
+        <div class="speedometer">
+          <div class="speed">
+            <span id="speed">0</span>
+            <span>km/h</span>
+          </div>
+        </div>
+
+        <div class="rpm-gauge">
+          <div class="rpm">
+            <span id="rpm">1000</span>
+            <span>RPM</span>
+          </div>
+        </div>
+
+        <!-- Central Information Display for Additional Metrics -->
+        <div class="center-info">
+          <div id="gearDisplay">Gear: N</div>
+          <div id="fuelDisplay">Fuel: 75%</div>
+          <div id="engineTempDisplay">Engine Temp: 90°C</div>
+          <div id="coolantTempDisplay">Coolant Temp: 85°C</div>
+          <div id="batteryVoltageDisplay">Battery: 12.5V</div>
+          <div id="oilPressureDisplay">Oil Pressure: 30 PSI</div>
+          <div id="fuelConsumptionDisplays">Fuel Consumption: 8.5 L/100km</div>
+          <div id="throttleDisplay">Throttle: 0%</div>
+          <div id="brakePressureDisplay">Brake Pressure: 0%</div>
+        </div>
+      </div>
+
+      <!-- Pedals -->
+      <div class="pedals">
+        <button id="accelerateBtn" class="pedal accelerate-pedal">Accelerate</button>
+        <button id="brakeBtn" class="pedal brake-pedal">Brake</button>
+        <button id="gearUpBtn" class="gear-btn">Gear Up</button>
+        <button id="gearDownBtn" class="gear-btn">Gear Down</button>
+      </div>
+      <div class="predictions">
+        <div id="fuelConsumptionDisplay">Remaining Range: </div>
+        <div id="maintenanceWarnings">Maintenance Alerts: </div>
+        <div id="brakeStatus">Brake Status: </div>
+        <div id="gearSuggestion">Gear Suggestion: </div>
+        <div id="driverBehavior">Driver Behavior: </div>
+    </div>
+    </div>
+  </div>
+  <audio id="engineSound" src="{% static 'engine-61234.mp3' %}" loop></audio>
+  <audio id="brakeSound" src="{% static 'car-stop-breaks-screech-engine-rev-6171.mp3' %}"></audio>
+  <script src="{% static 'index.js' %}"></script>
+  <script>
+    // function startRecognition() {
+    //   const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    //   recognition.lang = 'en-US';
+    //   recognition.interimResults = false;
+
+    //   recognition.onstart = function () {
+    //     console.log('Speech recognition started');
+    //   };
+
+    //   recognition.onspeechend = function () {
+    //     recognition.stop();
+    //   };
+
+    //   recognition.onresult = function (event) {
+    //     const transcript = event.results[0][0].transcript;
+    //     console.log('You said: ', transcript);
+    // Start continuous speech recognition when the page loads
+    window.addEventListener('load', startContinuousRecognition);
+    var transcript = '';
+    let recognition;
+    function startContinuousRecognition() {
+      if ('webkitSpeechRecognition' in window) {
+        recognition = new webkitSpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = 'en-US';
+
+        recognition.onstart = function () {
+          console.log('Speech recognition started');
+        };
+        function speakText(text) {
+          let utterance = new SpeechSynthesisUtterance(text);
+          utterance.voice = window.speechSynthesis.getVoices()[0];
+          window.speechSynthesis.speak(utterance);
+
+        }
+        recognition.onresult = function (event) {
+          let dummy = "";
+          // transcript = '';
+
+          for (var i = event.resultIndex; i < event.results.length; i++) {
+            if (event.results[i].isFinal) {
+              transcript += event.results[i][0].transcript;
+              dummy += event.results[i][0].transcript;
+            }
+          }
+
+          const keyword1 = 'close';
+          const keyword = 'eco';
+          if (transcript.toLowerCase().includes(keyword.toLowerCase())) {
+            console.log("Recogising......")
+            // speakText(dummy);
+            console.log('Keyword detected:', dummy);
+            document.getElementById("Nothing").innerHTML = "<div class='outer-container'><div class='circle-container'><img src='https://ascentt-wl-training-s3.s3.amazonaws.com/ANN/Wave+Sound.gif' alt='Wave Sound'>  </div>  </div>"
+
+            sendTranscriptToServer(dummy)
+            transcript = '';
+            function sendTranscriptToServer(transcript) {
+              fetch("{% url 'process_transcript' %}", {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({ transcript: transcript })
+
+              }
+              )
+
+                .then(response => response.json())
+                .then(data => {
+                  console.log('Success:', data);
+                })
+                .catch(error => {
+                  console.error('Error:', error);
+                });
+            }
+            function getCookie(name) {
+              let cookieValue = null;
+              if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                  const cookie = cookies[i].trim();
+                  if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                  }
+                }
+              }
+              return cookieValue;
+            }
+          } else {
+            document.getElementById("Nothing").innerHTML = "<div class=''><div class='circle-container'><img src='https://ascentt-wl-training-s3.s3.amazonaws.com/ANN/Wave+Sound.gif' alt='Wave Sound'>  </div>  </div>"
+
+          }
+
+        };
+
+        recognition.onerror = function (event) {
+          console.error('Speech recognition error:', event.error);
+        };
+
+        recognition.onend = function () {
+          console.log('Speech recognition ended');
+          // Optionally restart recognition if it stops
+          startContinuousRecognition();
+        };
+
+        recognition.start();
+
+
+        // l = document.getElementById("Reco").innerHTML
+        // document.getElementById("Reco").innerHTML = l + "<br>" + "<p>" + transcript + "</p>";
+        // Send the recognized speech to the backend
+
+        // let speakButton = document.getElementById("speak-button");
+
+        // // Add an event listener to the speak button
+        // speakButton.addEventListener("click", function () {
+        //   // Get the text from the text area
+        //   let text = transcript;
+
+        //   // Create a new SpeechSynthesisUtterance object
+        //   let utterance = new SpeechSynthesisUtterance();
+
+        //   // Set the text and voice of the utterance
+        //   utterance.text = text;
+        //   utterance.voice = window.speechSynthesis.getVoices()[0];
+
+        //   // Speak the utterance
+        //   window.speechSynthesis.speak(utterance);
+        // });
+
+      } else {
+        alert('Speech recognition is not supported in this browser.');
+      }
+    }
+    recognition.onerror = function (event) {
+      console.error('Speech recognition error:', event.error);
+    };
+
+    recognition.start();
+
+
+  </script>
+</body>
+
+</html>
