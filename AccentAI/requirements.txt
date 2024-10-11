@@ -6,3 +6,5 @@ transformers
 pyttsx3
 edge-tts
 playsound
+pandas
+matplotlib

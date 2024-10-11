@@ -16,6 +16,16 @@ import time
 import threading
 from sklearn.ensemble import GradientBoostingRegressor
 import concurrent.futures
+from langchain_core.prompts.prompt import PromptTemplate
+from langchain.chains import ConversationChain
+from langchain.memory import ConversationBufferMemory
+import cv2
+import numpy as np
+import speech_recognition as sr
+from PIL import Image
+import google.generativeai as genai
+import os
+
 
 
 # Global variables
@@ -23,7 +33,7 @@ global start
 start = time.time()
 
 # Load dataset and train models
-data = pd.read_csv('D:/Ascentt/Ritik Laptop/Vjay So/Downloads Data/ANN-Project-twelwesep/ANN-Project-twelwesep/AccentAI/ANN/static/car_dashboard_data_500_rows.csv')
+data = pd.read_csv('C:/Users/DEVESH RAJWANI/ascentt/cape4/AccentAI-Phase2/AccentAI/ANN/static/car_dashboard_data_500_rows.csv')
 
 fuel_tank_capacity = 50  # in liters (adjustable value)
 data['Remaining Range (km)'] = (data['Fuel Level (%)'] / 100) * (fuel_tank_capacity / data['Fuel Consumption (L/100km)']) * 100
@@ -59,7 +69,7 @@ def maintenance_alerts(engine_temp, oil_pressure, battery_voltage):
         alerts.append("High engine temperature!")
         if a == 0:
             while True:
-                playsound.playsound("D:/Ascentt/Ritik Laptop/Vjay So/Downloads Data/ANN-Project-twelwesep/ANN-Project-twelwesep/AccentAI/ANN/static/output.mp3")
+                playsound.playsound("C:/Users/DEVESH RAJWANI/ascentt/cape4/AccentAI-Phase2/AccentAI/ANN/static/output.mp3")
                 if time.time() - start < 600:
                     a = 1
                 else:
@@ -134,6 +144,34 @@ def predict(request):
         return JsonResponse(response)
     else:
         return HttpResponse("Cannot find the data")
+    
+    
+        # yolo ka kaam
+    
+recognizer = sr.Recognizer()
+cap = cv2.VideoCapture(0)
+os.environ['GOOGLE_API_KEY'] = 'AIzaSyAkZSrqr11htt4WKPwVMq3LZf_qPukI7E4'
+genai.configure(api_key=os.getenv('GOOGLE_API_KEY'))
+model = genai.GenerativeModel('gemini-1.5-flash')
+
+def extract_info(img_path, query):
+    img = Image.open(os.path.normpath("current_frame.jpg"))
+    response = model.generate_content([query, img], stream=True, 
+                                      generation_config=genai.GenerationConfig(temperature=0.8))
+    response.resolve()
+    return response.text
+
+# Listen for commands
+def listen_for_command():
+    with sr.Microphone() as source:
+        print("Listening for command...")
+        recognizer.adjust_for_ambient_noise(source)
+        audio = recognizer.listen(source)
+    try:
+        command = recognizer.recognize_google(audio)
+        return command.lower()
+    except sr.UnknownValueError:
+        return None
 
 # ---------- Voice Generation Feature ----------
 
@@ -159,6 +197,16 @@ async def generate_voice(text: str, Language: str):
                     audio_file.write(chunk["data"])
     except:
         pass
+    
+    
+    
+
+    
+    
+    
+
+
+    
 
 # ---------- Google Generative AI Integration ----------
 
@@ -189,18 +237,41 @@ new_prompt="""You are Eco an car care expert who is able to solve everything and
             and translating and providing correctly.
             Dont return question what i asked just start providing solution"""
 
+prompt1 = """Detect the language of the following text and return only the name of the language without any additional information:
+{}"""
 
-chain = LLMChain(llm=llm, memory=memory, prompt=PromptTemplate(template=new_prompt))
+template = """
+You are a voicebot assistant conducting a conversation with a user based on the following context:
 
-def detect_language(transcript):
+{history}
+
+Continue the conversation by responding to the user’s queries. Ensure the conversation flows logically and respond based on the user's previous input. Detect the language of the prompt, and if it's in English, always respond in English. For other languages, provide a detailed solution in the detected language. Ensure the response is both accurate and contextually appropriate for the user's question, which can range from car-related queries to personalized topics based on the user's preferences and previous interactions. Provide the solution in paragraph form without using any bullet points, stars, or special characters. Please ensure that the language detection, translation, and response are provided correctly with proper grammatical accuracy. Do not repeat the user's question; just begin by providing the solution directly.
+User: {input}
+AI Assistant:"""
+
+prompt = PromptTemplate(template=template, input_variables=['history', 'input'])
+conversation = ConversationChain(
+    llm=llm,
+    prompt=prompt,
+    verbose=False,
+    memory=ConversationBufferMemory(human_prefix="User", ai_prefix="AI Assistant")
+)
+
+
+
+
+# ---------- Views for Index and Processing Transcripts ----------
+global history
+history = ""
+
+def detect_language_func(transcript):
     return llm.invoke(prompt1.format(transcript)).content
 
 def process_text(transcript):
-    result = chain.invoke({"prompt": transcript})
-    return result["text"]
-
-# ---------- Views for Index and Processing Transcripts ----------
-
+    global history
+    response = conversation.predict(input = transcript)
+    history = history + "\n" + transcript + "\n" + response
+    return response
 def index(request):
     return render(request, 'index.html')
 
@@ -209,11 +280,38 @@ def process_transcript(request):
     if request.method == 'POST':
         data = json.loads(request.body.decode('utf-8'))
         transcript = data.get('transcript')
+        
+        
+        if transcript.strip() != "":
+            if "describe" in transcript or "what is this" in transcript:
+                # Capture frame from webcam
+                ret, frame = cap.read()
+                img_path = "current_frame.jpg"
+                cv2.imwrite(img_path, frame)
+
+                # Extract info from the image
+                query = transcript
+                result = extract_info(img_path, query)
+                print(result)
+                # Respond with description
+                asyncio.run(generate_voice(result.replace("*", ""), Language="English"))
+                
+            
+
+                # asyncio.run(generate_voice(result.replace("*", ""), Language=language))
+            
+                file_path = os.path.normpath("C:/Users/DEVESH RAJWANI/ascentt/cape4/AccentAI-Phase2/AccentAI/output_audio.mp3")
+                playsound.playsound(file_path, True)
+
+            
+
+                # Display response
+                return JsonResponse({'status': 'success', 'response': result})
 
         if transcript.strip() != "":
             with concurrent.futures.ThreadPoolExecutor() as executor:
     # Schedule both tasks to run in parallel
-                future_language = executor.submit(detect_language, transcript)
+                future_language = executor.submit(detect_language_func, transcript)
                 future_result = executor.submit(process_text, transcript)
 
                 # Wait for both tasks to complete and get their results
@@ -229,11 +327,20 @@ def process_transcript(request):
                 print("Result in Native Language: ", result)
 
             asyncio.run(generate_voice(result.replace("*", ""), Language=language))
-            playsound.playsound("D:/Ascentt/Ritik Laptop/Vjay So/Downloads Data/ANN-Project-twelwesep/ANN-Project-twelwesep/AccentAI/output_audio.mp3", True)
+            import os
+            file_path = os.path.normpath("C:/Users/DEVESH RAJWANI/ascentt/cape4/AccentAI-Phase2/AccentAI/output_audio.mp3")
+            playsound.playsound(file_path, True)
+
+            playsound.playsound("C:/Users/DEVESH RAJWANI/ascentt/cape4/AccentAI-Phase2/AccentAI/output_audio.mp3", True)
+            
 
             return JsonResponse({'status': 'success', 'transcript': transcript})
         
     return JsonResponse({'status': 'failed', 'message': 'Invalid request method'})
+
+
+
+
 
 
 
