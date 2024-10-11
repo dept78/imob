@@ -8,6 +8,7 @@ from transformers import pipeline
 from langchain.chains import LLMChain
 from langchain.prompts import PromptTemplate
 import pyttsx3
+import asyncio
 import edge_tts
 import asyncio
 import playsound
@@ -300,6 +301,7 @@ def process_transcript(request):
 
                 # asyncio.run(generate_voice(result.replace("*", ""), Language=language))
             
+                import os
                 file_path = os.path.normpath("C:/Users/DEVESH RAJWANI/ascentt/cape4/AccentAI-Phase2/AccentAI/output_audio.mp3")
                 playsound.playsound(file_path, True)
 
