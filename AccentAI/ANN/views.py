@@ -573,3 +573,5 @@ def process_transcript(request):
 #             return JsonResponse({'status': 'success', 'transcript': transcript})
         
 #     return JsonResponse({'status': 'failed', 'message': 'Invalid request method'})
+
+
