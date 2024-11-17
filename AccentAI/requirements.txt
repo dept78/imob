@@ -8,3 +8,4 @@ edge-tts
 playsound
 pandas
 matplotlib
+

@@ -52,7 +52,7 @@
   }
 .outer-container {
       padding: 100px; /* Space around the circle */
-      background-image: url('https://ascentt-wl-training-s3.s3.amazonaws.com/ANN/Image5.gif'); /* Background image */
+      background-image: 'C:\Users\DEVESH RAJWANI\3D Objects\AccentAI-Phase2\AccentAI\ANN\static\Image5.gif' ; /* Background image */
       background-size: cover; /* Adjust the background image to cover the container */
       background-position: center; /* Center the background image */
       display: flex;
@@ -152,141 +152,9 @@
     align-items: center;
     height: 100vh;
 } */
+  
+/* smart obd */
 
 /* Instrument Cluster Styling */
-.cluster {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 90%;
-    max-width: 1200px;
-    background-color: #222;
-    border-radius: 30px;
-    padding: 20px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
-    position: relative;
-}
 
-/* Prediction Panel Styling */
-.predictions {
-    width: 300px;
-    background-color: #333;
-    border-radius: 20px;
-    padding: 20px;
-    box-shadow: 0 0 20px rgba(0, 255, 0, 0.2);
-    margin-right: 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
 
-.predictions div {
-    margin: 10px 0;
-    font-size: 18px;
-    color: #0f0;
-    padding: 10px;
-    width: 100%;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
-    text-align: center;
-    transition: background-color 0.3s ease;
-}
-
-.predictions div:hover {
-    background-color: rgba(0, 255, 0, 0.2);
-}
-
-/* Speedometer and RPM Gauge Styling */
-.speedometer, .rpm-gauge {
-    width: 120px;
-    height: 120px;
-    border: 4px solid #444;
-    border-radius: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    position: relative;
-}
-
-.speedometer .speed, .rpm-gauge .rpm {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-.speedometer .speed span:first-child, 
-.rpm-gauge .rpm span:first-child {
-    font-size: 32px;
-    font-weight: bold;
-    color: #0f0;
-}
-
-.speedometer .speed span:last-child, 
-.rpm-gauge .rpm span:last-child {
-    font-size: 16px;
-    color: #ccc;
-}
-
-/* Center Info Styling */
-.center-info {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    color:#fff;
-}
-
-.center-info div {
-    margin: 5px 0;
-    font-size: 18px;
-}
-
-/* Pedals Styling */
-.pedals {
-    margin-top: 30px;
-    display: flex;
-    justify-content: space-around;
-    width: 100%;
-    max-width: 400px;
-}
-
-.pedal {
-    width: 100px;
-    height: 150px;
-    background-color: #333;
-    color: #fff;
-    border: 2px solid #444;
-    border-radius: 10px;
-    font-size: 18px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
-
-.pedal:active {
-    background-color: #555;
-}
-
-.accelerate-pedal {
-    background: linear-gradient(135deg, #111, #666);
-}
-
-.brake-pedal {
-    background: linear-gradient(135deg, #111, red);
-}
-
-.gear-btn {
-    width: 80px;
-    height: 50px;
-    background-color: #555;
-    color: white;
-    font-size: 16px;
-    cursor: pointer;
-    border: 2px solid #444;
-    border-radius: 8px;
-    transition: background-color 0.3s;
-    margin: 5px;
-}
-
-.gear-btn:active {
-    background-color: #777;
-}

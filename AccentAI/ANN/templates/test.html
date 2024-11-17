@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather App</title>
+</head>
+<body>
+    <h1>Weather App</h1>
+    <button onclick="getWeather()">Get My Weather</button>
+
+    <script>
+        function getWeather() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(success, error);
+            } else {
+                alert('Geolocation is not supported by this browser.');
+            }
+        }
+
+        function success(position) {
+            const latitude = position.coords.latitude;
+            const longitude = position.coords.longitude;
+
+            // Send latitude and longitude to backend
+            fetch('http://3.239.225.154/get-weather', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ latitude: latitude, longitude: longitude })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);  // You can display the data on the page here
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function error() {
+            alert('Unable to retrieve your location.');
+        }
+    </script>
+</body>
+</html>
